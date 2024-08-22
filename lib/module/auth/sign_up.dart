@@ -50,7 +50,7 @@ class _SignupPageState extends State<SignupPage> {
         return await storageRef.getDownloadURL();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('User is not authenticated')),
+          const SnackBar(content: Text('User is not authenticated')),
         );
         return null;
       }
@@ -78,8 +78,8 @@ class _SignupPageState extends State<SignupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Sign Up"),
-        backgroundColor: Colors.deepPurple,
+        title: const Text("Sign Up"),
+        centerTitle: true,
       ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) async {
@@ -117,62 +117,63 @@ class _SignupPageState extends State<SignupPage> {
                 GestureDetector(
                   onTap: _pickImage,
                   child: CircleAvatar(
-                    radius: 50,
+                    radius: 80,
+                    backgroundColor: Colors.black,
                     backgroundImage: _profileImage != null
                         ? FileImage(_profileImage!)
-                        : AssetImage('assets/default_avatar.png')
+                        : const AssetImage('assets/default_avatar.png')
                             as ImageProvider,
                     child: _profileImage == null
-                        ? Icon(
-                            Icons.camera_alt,
+                        ? const Icon(
+                            Icons.camera_alt_outlined,
                             color: Colors.white,
                             size: 30,
                           )
                         : null,
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TextField(
                   controller: _fullNameController,
-                  decoration: InputDecoration(
-                    labelText: "Full Name",
+                  decoration: const InputDecoration(
+                    labelText: "Nama Panjang",
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person),
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextField(
                   controller: _emailController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Email",
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.email),
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextField(
                   controller: _passwordController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Password",
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock),
                   ),
                   obscureText: true,
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     if (state is AuthLoading || _isUploading) {
-                      return CircularProgressIndicator();
+                      return const CircularProgressIndicator();
                     }
                     return ElevatedButton(
                       onPressed: _onSignupButtonPressed,
-                      child: Text("Sign Up"),
+                      child: const Text("Sign Up"),
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        backgroundColor: Colors.deepPurple,
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                        backgroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 50, vertical: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
@@ -180,14 +181,14 @@ class _SignupPageState extends State<SignupPage> {
                     );
                   },
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: Text("Already have an account? Login"),
+                  child: const Text("Already have an account? Login"),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.deepPurple,
+                    foregroundColor: Colors.black,
                   ),
                 ),
               ],

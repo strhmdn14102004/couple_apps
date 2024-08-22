@@ -1,43 +1,60 @@
-import "dart:io";
+import 'dart:io';
 
-import "package:cloud_firestore/cloud_firestore.dart";
-import "package:couple_app/api/custom_http_overrides.dart";
-import "package:couple_app/firebase_options.dart";
-import "package:couple_app/helper/app_colors.dart";
-import "package:couple_app/helper/dimensions.dart";
-import "package:couple_app/helper/navigators.dart";
-import "package:couple_app/helper/preferences.dart";
-import "package:couple_app/module/auth/auth_bloc.dart";
-import "package:couple_app/module/auth/auth_page.dart";
-import "package:couple_app/module/home/home_bloc.dart";
-import "package:couple_app/module/home/home_page.dart";
-import "package:firebase_auth/firebase_auth.dart";
-
-import "package:firebase_core/firebase_core.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_bloc/flutter_bloc.dart";
-import "package:get/get_navigation/src/root/get_material_app.dart";
-import "package:intl/date_symbol_data_local.dart";
-import "package:loader_overlay/loader_overlay.dart";
-import "package:lottie/lottie.dart";
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:couple_app/api/custom_http_overrides.dart';
+import 'package:couple_app/firebase_options.dart';
+import 'package:couple_app/helper/app_colors.dart';
+import 'package:couple_app/helper/dimensions.dart';
+import 'package:couple_app/helper/navigators.dart';
+import 'package:couple_app/helper/preferences.dart';
+import 'package:couple_app/module/auth/auth_bloc.dart';
+import 'package:couple_app/module/auth/auth_page.dart';
+import 'package:couple_app/module/home/home_bloc.dart';
+import 'package:couple_app/module/home/home_page.dart';
+import 'package:couple_app/module/profile/profile_bloc.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   HttpOverrides.global = CustomHttpOverrides();
   initializeDateFormatting();
+
   await Preferences.getInstance().init();
-await Firebase.initializeApp();
   runApp(App());
 }
 
+class App extends StatefulWidget {
+  @override
+  _AppState createState() => _AppState();
+}
 
-class App extends StatelessWidget {
+class _AppState extends State<App> {
   final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
       GlobalKey<ScaffoldMessengerState>();
 
-  App({super.key});
+  String? userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserSession();
+  }
+
+  Future<void> _checkUserSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userId = prefs.getString('user_id');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,9 +62,11 @@ class App extends StatelessWidget {
       providers: [
         BlocProvider(create: (BuildContext context) => HomeBloc()),
         BlocProvider(
-          create: (context) => AuthBloc(FirebaseAuth.instance, FirebaseFirestore.instance)
-           
-        ),
+            create: (context) =>
+                AuthBloc(FirebaseAuth.instance, FirebaseFirestore.instance)),
+        BlocProvider(
+            create: (context) =>
+                ProfileBloc(FirebaseAuth.instance, FirebaseFirestore.instance)),
       ],
       child: GlobalLoaderOverlay(
         useDefaultLoading: false,
@@ -98,15 +117,7 @@ class App extends StatelessWidget {
                 child: child ?? Container(),
               );
             },
-            home: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            if (state is AuthAuthenticated) {
-              return HomePage();
-            } else {
-              return LoginPage();
-            }
-          },
-        ),
+            home: userId != null ? HomePage() : LoginPage(),
           ),
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:couple_app/helper/device_info.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -19,24 +20,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthUpdateProfile>(_onUpdateProfile);
   }
 
-  Future<void> _onUpdateProfile(
-      AuthUpdateProfile event, Emitter<AuthState> emit) async {
-    try {
-      final user = _firebaseAuth.currentUser;
-      if (user != null) {
-        // Update the user's profile with the photo URL
-        await user.updatePhotoURL(event.photoUrl);
-        // Optionally, you can also update the Firestore document with the new photo URL
-        await _firestore.collection('users').doc(user.uid).update({
-          'photoProfile': event.photoUrl,
-        });
-
-        // Notify the state that the profile was successfully updated
-        emit(AuthAuthenticated(user.uid));
-      }
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
+  Future<void> saveUserSession(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_id', userId);
   }
 
   void _onLoginRequested(
@@ -48,6 +34,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
       );
+
+      await saveUserSession(userCredential.user!.uid);
       await _deviceInfoService.saveDeviceInfoToFirestore();
 
       // Fetch user info from Firestore
@@ -57,8 +45,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           .get();
 
       if (!userDoc.exists) {
-        emit(AuthError("User data not found."));
+        emit(const AuthError("User data not found."));
       } else {
+        // Ensure that AuthAuthenticated is emitted after all tasks are done
         emit(AuthAuthenticated(userCredential.user!.uid));
       }
     } catch (e) {
@@ -91,9 +80,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
+  void _onUpdateProfile(
+      AuthUpdateProfile event, Emitter<AuthState> emit) async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null) {
+        // Update the user's profile with the photo URL
+        await user.updatePhotoURL(event.photoUrl);
+        // Optionally, you can also update the Firestore document with the new photo URL
+        await _firestore.collection('users').doc(user.uid).update({
+          'photoProfile': event.photoUrl,
+        });
+
+        // Notify the state that the profile was successfully updated
+        emit(AuthAuthenticated(user.uid));
+      }
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
   void _onLogoutRequested(
       AuthLogoutRequested event, Emitter<AuthState> emit) async {
-    await _firebaseAuth.signOut();
-    emit(AuthInitial());
+    try {
+      // Sign out from Firebase
+      await _firebaseAuth.signOut();
+
+      // Clear user session from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_id');
+
+      emit(AuthInitial()); // Emit AuthInitial to notify the UI
+    } catch (e) {
+      emit(AuthError('Failed to log out: ${e.toString()}'));
+    }
   }
 }

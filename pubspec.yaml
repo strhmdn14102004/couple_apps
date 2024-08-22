@@ -51,6 +51,8 @@ flutter:
   assets:
     - assets/
     - assets/font/
+    - assets/images/
+    - assets/images/maps.png
     - assets/images/default_profile.png
     - assets/lottie/
   fonts:

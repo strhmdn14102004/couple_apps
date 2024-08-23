@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:couple_app/helper/dimensions.dart';
 import 'package:couple_app/module/auth/auth_bloc.dart';
-import 'package:couple_app/module/auth/auth_page.dart';
 import 'package:couple_app/overlay/overlays.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -134,35 +134,41 @@ class _SignupPageState extends State<SignupPage> {
                         : null,
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: Dimensions.size35),
                 TextField(
                   controller: _fullNameController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: "Nama Panjang",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    prefixIcon: const Icon(Icons.person),
                   ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: "Email",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.email),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    prefixIcon: const Icon(Icons.email),
                   ),
                 ),
                 const SizedBox(height: 10),
                 TextField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: "Password",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    prefixIcon: const Icon(Icons.lock),
                   ),
                   obscureText: true,
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: Dimensions.size35),
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     if (state is AuthLoading || _isUploading) {
@@ -190,7 +196,7 @@ class _SignupPageState extends State<SignupPage> {
                   },
                   child: const Text("Sudah Memiliki Akun? Login"),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.black,
+                    foregroundColor: Colors.grey,
                   ),
                 ),
               ],

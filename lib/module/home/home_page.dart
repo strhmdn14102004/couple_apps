@@ -470,8 +470,10 @@ class _HomePageState extends State<HomePage> {
               child: FloatingActionButton(
                 heroTag: "Switch",
                 onPressed: _toggleMapType,
-                child: const Icon(
-                  Icons.layers,
+                child: Icon(
+                  _currentMapType == MapType.satellite
+                      ? Icons.map_rounded
+                      : Icons.satellite_alt_rounded,
                   color: Colors.black,
                   size: 25,
                 ),

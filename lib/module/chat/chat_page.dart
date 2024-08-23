@@ -1,7 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:couple_app/api/model/user_model.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For formatting the timestamp
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class ChatPage extends StatefulWidget {
   final User user;
@@ -16,36 +16,111 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
 
- void _sendMessage() {
-  if (_messageController.text.isNotEmpty) {
-    // Store message for the receiver
-    FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.user.uid)
-        .collection('messages')
-        .add({
-      'senderId': widget.currentUserId,
-      'receiverId': widget.user.uid,
-      'message': _messageController.text,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+  void _sendMessage() {
+    if (_messageController.text.isNotEmpty) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.user.uid)
+          .collection('messages')
+          .add({
+        'senderId': widget.currentUserId,
+        'receiverId': widget.user.uid,
+        'message': _messageController.text,
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+      });
 
-    // Store message for the sender
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.currentUserId)
+          .collection('messages')
+          .add({
+        'senderId': widget.currentUserId,
+        'receiverId': widget.user.uid,
+        'message': _messageController.text,
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': true,
+      });
+
+      _messageController.clear();
+    }
+  }
+
+  void _showMessageOptions(BuildContext context, DocumentSnapshot messageDoc) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text('Hapus'),
+              onTap: () {
+                Navigator.pop(context);
+                _deleteMessage(messageDoc);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Edit'),
+              onTap: () {
+                Navigator.pop(context);
+                _editMessage(messageDoc);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteMessage(DocumentSnapshot messageDoc) {
     FirebaseFirestore.instance
         .collection('users')
         .doc(widget.currentUserId)
         .collection('messages')
-        .add({
-      'senderId': widget.currentUserId,
-      'receiverId': widget.user.uid,
-      'message': _messageController.text,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-
-    _messageController.clear();
+        .doc(messageDoc.id)
+        .delete();
   }
-}
 
+  void _editMessage(DocumentSnapshot messageDoc) {
+    var messageData = messageDoc.data() as Map<String, dynamic>;
+    _messageController.text = messageData['message'];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Pesan'),
+          content: TextField(
+            controller: _messageController,
+            decoration: const InputDecoration(hintText: 'Edit your message'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () {
+                FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(widget.currentUserId)
+                    .collection('messages')
+                    .doc(messageDoc.id)
+                    .update({'message': _messageController.text});
+                _messageController.clear();
+                Navigator.pop(context);
+              },
+              child: const Text('Kirim'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Stream<QuerySnapshot> _chatMessagesStream() {
     return FirebaseFirestore.instance
@@ -87,67 +162,73 @@ class _ChatPageState extends State<ChatPage> {
                   reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    var message =
-                        messages[index].data() as Map<String, dynamic>;
+                    var message = messages[index].data() as Map<String, dynamic>;
                     bool isSentByCurrentUser =
                         message['senderId'] == widget.currentUserId;
 
-                    return Align(
-                      alignment: isSentByCurrentUser
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(
-                          vertical: 4.0,
-                          horizontal: 8.0,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 10.0,
-                          horizontal: 14.0,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSentByCurrentUser
-                              ? Colors.teal[500]
-                              : Colors.grey[300],
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(8),
-                            topRight: const Radius.circular(8),
-                            bottomLeft: isSentByCurrentUser
-                                ? const Radius.circular(8)
-                                : const Radius.circular(0),
-                            bottomRight: isSentByCurrentUser
-                                ? const Radius.circular(0)
-                                : const Radius.circular(8),
+                    return GestureDetector(
+                      onLongPress: () {
+                        // Show options only for messages sent by the current user
+                        if (isSentByCurrentUser) {
+                          _showMessageOptions(context, messages[index]);
+                        }
+                      },
+                      child: Align(
+                        alignment: isSentByCurrentUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(
+                            vertical: 4.0,
+                            horizontal: 8.0,
                           ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              message['message'],
-                              style: TextStyle(
-                                color: isSentByCurrentUser
-                                    ? Colors.white
-                                    : Colors.black,
-                                fontSize: 16,
-                              ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10.0,
+                            horizontal: 14.0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSentByCurrentUser
+                                ? Colors.teal[500]
+                                : Colors.grey[300],
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(8),
+                              topRight: const Radius.circular(8),
+                              bottomLeft: isSentByCurrentUser
+                                  ? const Radius.circular(8)
+                                  : const Radius.circular(0),
+                              bottomRight: isSentByCurrentUser
+                                  ? const Radius.circular(0)
+                                  : const Radius.circular(8),
                             ),
-                            const SizedBox(height: 5),
-                            Text(
-                              DateFormat('hh:mm a').format(
-                                (message['timestamp'] as Timestamp?)
-                                        ?.toDate() ??
-                                    DateTime
-                                        .now(), // Handle null and provide a default value
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                message['message'],
+                                style: TextStyle(
+                                  color: isSentByCurrentUser
+                                      ? Colors.white
+                                      : Colors.black,
+                                  fontSize: 16,
+                                ),
                               ),
-                              style: TextStyle(
-                                color: isSentByCurrentUser
-                                    ? Colors.white70
-                                    : Colors.black54,
-                                fontSize: 12,
+                              const SizedBox(height: 5),
+                              Text(
+                                DateFormat('hh:mm a').format(
+                                  (message['timestamp'] as Timestamp?)
+                                          ?.toDate() ??
+                                      DateTime.now(),
+                                ),
+                                style: TextStyle(
+                                  color: isSentByCurrentUser
+                                      ? Colors.white70
+                                      : Colors.black54,
+                                  fontSize: 12,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );

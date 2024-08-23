@@ -15,7 +15,7 @@ class ChatListPage extends StatelessWidget {
     final currentUserId = auth.FirebaseAuth.instance.currentUser?.uid;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bubble Chats'),
+        title: const Text('Bubble Chats  (BETA)'),
         centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -27,6 +27,7 @@ class ChatListPage extends StatelessWidget {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
+
           var users = snapshot.data!.docs
               .where((doc) => doc.id != currentUserId)
               .map((doc) {
@@ -39,6 +40,7 @@ class ChatListPage extends StatelessWidget {
               roomCode: data['roomCode'],
             );
           }).toList();
+
           return ListView.builder(
             itemCount: users.length,
             itemBuilder: (context, index) {
@@ -46,10 +48,9 @@ class ChatListPage extends StatelessWidget {
               return StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('users')
-                    .doc(currentUserId)
+                    .doc(user.uid)
                     .collection('messages')
                     .orderBy('timestamp', descending: true)
-                    .limit(1)
                     .snapshots(),
                 builder: (context, messageSnapshot) {
                   if (!messageSnapshot.hasData ||
@@ -78,16 +79,25 @@ class ChatListPage extends StatelessWidget {
                       },
                     );
                   }
-                  var lastMessageDoc = messageSnapshot.data!.docs.first;
+
+                  var messages = messageSnapshot.data!.docs;
+
+                  // Ensure isRead field exists or default to false
+                  var unreadCount = messages
+                      .where((doc) =>
+                          (doc.data() as Map<String, dynamic>)['isRead'] ??
+                          false == false && doc['receiverId'] == currentUserId)
+                      .length;
+
+                  var lastMessageDoc = messages.first;
                   var lastMessage = lastMessageDoc['message'];
-                  var timestamp;
-                  if (lastMessageDoc['timestamp'] != null) {
-                    timestamp = lastMessageDoc['timestamp'] as Timestamp;
-                  } else {
-                    timestamp = null;
-                  }
-                  var senderId = lastMessageDoc[
-                      'senderId']; // Assuming senderId field exists
+
+                  // Check for null timestamp
+                  var timestamp = lastMessageDoc['timestamp'];
+                  var formattedTimestamp =
+                      timestamp != null && timestamp is Timestamp
+                          ? DateFormat('hh:mm a').format(timestamp.toDate())
+                          : 'No time'; // Default or handle null timestamp
 
                   return ListTile(
                     leading: CircleAvatar(
@@ -112,26 +122,19 @@ class ChatListPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          timestamp != null
-                              ? DateFormat('hh:mm a').format(timestamp.toDate())
-                              : 'Unknown time',
+                          formattedTimestamp,
                           style: const TextStyle(
-                            color: Colors.grey,
                             fontSize: 12,
+                            color: Colors.grey,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        if (senderId !=
-                            currentUserId) // Show notification only if message is from another user
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                              color: Colors.teal,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Text(
-                              '1', // Placeholder for unread message count
-                              style: TextStyle(
+                        if (unreadCount > 0)
+                          CircleAvatar(
+                            radius: 10,
+                            backgroundColor: Colors.red,
+                            child: Text(
+                              unreadCount.toString(),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                               ),
@@ -139,7 +142,8 @@ class ChatListPage extends StatelessWidget {
                           ),
                       ],
                     ),
-                    onTap: () {
+                    onTap: () async {
+                      await _markMessagesAsRead(user.uid, currentUserId!);
                       _navigateToChatPage(context, user, currentUserId);
                     },
                   );
@@ -152,25 +156,34 @@ class ChatListPage extends StatelessWidget {
     );
   }
 
+  Future<void> _markMessagesAsRead(String userId, String currentUserId) async {
+    final messageCollection = FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('messages');
+
+    final unreadMessages = await messageCollection
+        .where('isRead', isEqualTo: false)
+        .where('receiverId', isEqualTo: currentUserId)
+        .get();
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (var doc in unreadMessages.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+
+    await batch.commit();
+  }
+
   void _navigateToChatPage(
       BuildContext context, User user, String? currentUserId) {
-    if (currentUserId != null && currentUserId.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ChatPage(
-            user: user,
-            currentUserId: currentUserId,
-          ),
-        ),
-      );
-    } else {
-      // Handle case when currentUserId is null or empty
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Unable to open chat. User not logged in."),
-        ),
-      );
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ChatPage(user: user, currentUserId: currentUserId!),
+      ),
+    );
   }
 }

@@ -1,10 +1,64 @@
+import 'package:couple_app/helper/dimensions.dart';
 import 'package:couple_app/module/home/home_page.dart';
 import 'package:couple_app/module/profile/profile_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Import for input formatters
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 
-class RoomCodePage extends StatelessWidget {
+class RoomCodePage extends StatefulWidget {
+  @override
+  _RoomCodePageState createState() => _RoomCodePageState();
+}
+
+class _RoomCodePageState extends State<RoomCodePage> {
   final TextEditingController _roomCodeController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  void _showConfirmationDialog() {
+    final roomCode = _roomCodeController.text.trim();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Konfirmasi Kode Ruangan'),
+          content: Text(
+            'Apakah Anda yakin ingin menggunakan kode $roomCode sebagai kode ruangan Anda?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                _submitRoomCode(); // Proceed with submitting the code
+              },
+              child: Text('Ya'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _submitRoomCode() {
+    if (_formKey.currentState?.validate() ?? false) {
+      final roomCode = _roomCodeController.text.trim();
+      context.read<ProfileBloc>().add(SubmitRoomCodeEvent(roomCode));
+    }
+  }
+
+  void _handleConfirmation() {
+    if (_formKey.currentState?.validate() ?? false) {
+      _showConfirmationDialog();
+    } else {
+      // Optionally, show a Snackbar or other message indicating validation errors
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,11 +77,10 @@ class RoomCodePage extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content:
-                  Text('Kode Ruangan ${state.roomCode} berhasil disimpan!'),
+                  Text('Kode Ruangan ${state.roomCode} berhasil digunakan!'),
               backgroundColor: Colors.green,
             ),
           );
-          // Use a safe navigation method
         } else if (state is ProfileError) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -44,42 +97,89 @@ class RoomCodePage extends StatelessWidget {
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextField(
-                controller: _roomCodeController,
-                decoration: InputDecoration(
-                  labelText: 'Masukkan Kode Ruangan',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: const BorderSide(),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.0),
-                    borderSide: const BorderSide(),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 15.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Lottie.asset(
+                        "assets/lottie/lock.json",
+                        frameRate: FrameRate(60),
+                        width: Dimensions.size100 * 2,
+                        repeat: true,
+                      ),
+                    ],
                   ),
                 ),
-                onPressed: () {
-                  final roomCode = _roomCodeController.text.trim();
-                  if (roomCode.isNotEmpty) {
-                    context
-                        .read<ProfileBloc>()
-                        .add(SubmitRoomCodeEvent(roomCode));
-                  }
-                },
-                child: const Text('Simpan Kode Ruangan'),
-              ),
-            ],
+                SizedBox(
+                  height: Dimensions.size10,
+                ),
+                const Text(
+                  "Pastikan Kode Ruangan yang anda masukan adalah kode ruangan terpercaya. jangan bagikan kode ruangan anda ke orang yang tidak anda percayai. kode ruangan bersifat RAHASIA",
+                  style: TextStyle(),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(
+                  height: Dimensions.size15,
+                ),
+                TextFormField(
+                  controller: _roomCodeController,
+                  decoration: InputDecoration(
+                    labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                    alignLabelWithHint: true,
+                    labelText: 'Masukkan Kode Ruangan',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: const BorderSide(),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                      borderSide: const BorderSide(),
+                    ),
+                  ),
+                  keyboardType:
+                      TextInputType.number, // Restrict keyboard to numbers
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly, // Allow only digits
+                    LengthLimitingTextInputFormatter(
+                        6), // Limit input to 6 characters
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Kode ruangan tidak boleh kosong';
+                    } else if (value.length != 6) {
+                      return 'Kode ruangan harus terdiri dari 6 angka';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                Center(
+                  child: SizedBox(
+                    width: 150, // Reduced width for the button
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 15.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      onPressed: _handleConfirmation,
+                      child: const Text(
+                        'Konfirmasi Kode',
+                        style: TextStyle(color: Colors.white),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

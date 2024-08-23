@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:couple_app/module/auth/auth_bloc.dart';
+import 'package:couple_app/module/auth/auth_page.dart';
+import 'package:couple_app/overlay/overlays.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,8 +42,7 @@ class _SignupPageState extends State<SignupPage> {
     try {
       final authState = context.read<AuthBloc>().state;
       if (authState is AuthAuthenticated) {
-        final userId =
-            authState.userId; // Access userId from AuthAuthenticated state
+        final userId = authState.userId;
         final storageRef = FirebaseStorage.instance
             .ref()
             .child('user_profile_images')
@@ -63,13 +64,12 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   void _onSignupButtonPressed() async {
-    // Trigger sign-up process
     context.read<AuthBloc>().add(
           AuthSignupRequested(
             _emailController.text,
             _passwordController.text,
             _fullNameController.text,
-            '', // initially pass an empty string for the photoUrl
+            '',
           ),
         );
   }
@@ -84,21 +84,15 @@ class _SignupPageState extends State<SignupPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) async {
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.error)),
-            );
           } else if (state is AuthAuthenticated) {
             if (_profileImage != null) {
               setState(() {
                 _isUploading = true;
               });
-              // Upload image after successful sign-up
               final photoUrl = await _uploadImage(_profileImage!);
               setState(() {
                 _isUploading = false;
               });
-
-              // Update user profile with the photoUrl
               if (photoUrl != null) {
                 context.read<AuthBloc>().add(
                       AuthUpdateProfile(photoUrl),
@@ -106,13 +100,21 @@ class _SignupPageState extends State<SignupPage> {
               }
             }
 
-            Navigator.of(context).pushReplacementNamed('/loginPage');
+            // Navigator.pushReplacement(
+            //   context,
+            //   MaterialPageRoute(builder: (context) => LoginPage()),
+            // );
+            Overlays.success(
+              message: "Registrasi Akun Berhasil",
+            );
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(18),
           child: SingleChildScrollView(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 GestureDetector(
                   onTap: _pickImage,
@@ -121,7 +123,7 @@ class _SignupPageState extends State<SignupPage> {
                     backgroundColor: Colors.black,
                     backgroundImage: _profileImage != null
                         ? FileImage(_profileImage!)
-                        : const AssetImage('assets/default_avatar.png')
+                        : const AssetImage('assets/images/default_profile.png')
                             as ImageProvider,
                     child: _profileImage == null
                         ? const Icon(
@@ -186,7 +188,7 @@ class _SignupPageState extends State<SignupPage> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: const Text("Already have an account? Login"),
+                  child: const Text("Sudah Memiliki Akun? Login"),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.black,
                   ),

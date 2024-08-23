@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:couple_app/helper/device_info.dart';
+import 'package:couple_app/overlay/overlays.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,7 +39,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await saveUserSession(userCredential.user!.uid);
       await _deviceInfoService.saveDeviceInfoToFirestore();
 
-      // Fetch user info from Firestore
       DocumentSnapshot userDoc = await _firestore
           .collection('users')
           .doc(userCredential.user!.uid)
@@ -47,38 +47,65 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (!userDoc.exists) {
         emit(const AuthError("User data not found."));
       } else {
-        // Ensure that AuthAuthenticated is emitted after all tasks are done
         emit(AuthAuthenticated(userCredential.user!.uid));
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
-    }
-  }
+      String errorMessage;
 
-  void _onSignupRequested(
-      AuthSignupRequested event, Emitter<AuthState> emit) async {
-    try {
-      emit(AuthLoading());
-      UserCredential userCredential =
-          await _firebaseAuth.createUserWithEmailAndPassword(
-        email: event.email,
-        password: event.password,
+      if (e is FirebaseAuthException && e.code == 'wrong-password') {
+        errorMessage = "Password yang anda masukan salah";
+      } else if (e is FirebaseAuthException && e.code == 'invalid-email') {
+        errorMessage = "Email yang kamu masukkan tidak valid.";
+      } else {
+        errorMessage =
+            "Ada sesuatu yang salah. Periksa kembali email atau password akun kamu.";
+      }
+
+      Overlays.error(
+        message: errorMessage,
       );
-
-      // Save user info in Firestore
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
-        'fullName': event.fullName,
-        'photoProfile': event.photoProfile,
-        'location': null,
-        'speed': 0.0,
-        'distance': 0.0,
-      });
-
-      emit(AuthAuthenticated(userCredential.user!.uid));
-    } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(errorMessage));
     }
   }
+
+ void _onSignupRequested(
+    AuthSignupRequested event, Emitter<AuthState> emit) async {
+  try {
+    emit(AuthLoading());
+    UserCredential userCredential =
+        await _firebaseAuth.createUserWithEmailAndPassword(
+      email: event.email,
+      password: event.password,
+    );
+
+    // Save user info in Firestore
+    await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      'fullName': event.fullName,
+      'photoProfile': event.photoProfile,
+      'location': null,
+      'speed': 0.0,
+      'distance': 0.0,
+    });
+
+    emit(AuthAuthenticated(userCredential.user!.uid));
+   
+  } catch (e) {
+    String errorMessage;
+
+    // Check if the error message contains the specific firebase_auth/channel-error message
+    if (e.toString().contains('firebase_auth/channel-error')) {
+      errorMessage = "Lengkapi semua kolom pendaftaran terlebih dahulu.";
+    } else {
+      errorMessage = e.toString();
+    }
+
+    emit(AuthError(errorMessage));
+    Overlays.error(
+      message: errorMessage,
+    );
+  }
+}
+
 
   void _onUpdateProfile(
       AuthUpdateProfile event, Emitter<AuthState> emit) async {

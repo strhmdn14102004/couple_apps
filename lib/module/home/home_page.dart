@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:couple_app/helper/dimensions.dart';
+import 'package:couple_app/module/chat/chat_list_page.dart';
 import 'package:couple_app/module/profile/profile_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -291,34 +293,41 @@ class _HomePageState extends State<HomePage> {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("${data['fullName']}"),
+                SizedBox(
+                  height: Dimensions.size10,
+                ),
+                Text(
+                  "${data['fullName']}",
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(
+                  height: Dimensions.size15,
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Icon(Icons.battery_full_rounded),
                     Text("${data['battery']}%"),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
+                    SizedBox(
+                      width: Dimensions.size10,
+                    ),
                     const Icon(Icons.network_cell),
                     Text("${data['network']}"),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
+                    SizedBox(
+                      width: Dimensions.size10,
+                    ),
                     const Icon(Icons.devices_other_rounded),
                     Text("${data['deviceModel']}"),
                   ],
                 ),
+                SizedBox(
+                  height: Dimensions.size20,
+                ),
                 Text('Emoji Buat Kamu: $emoji'),
-                const SizedBox(height: 20),
-                const Text("Send an emoji:"),
+                const SizedBox(height: 10),
+                const Text("Kirim Emoji:"),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
@@ -457,11 +466,34 @@ class _HomePageState extends State<HomePage> {
             ),
             Positioned(
               right: 20,
-              top: 70,
+              top: 50,
               child: FloatingActionButton(
+                heroTag: "Switch",
                 onPressed: _toggleMapType,
                 child: const Icon(
                   Icons.layers,
+                  color: Colors.black,
+                  size: 25,
+                ),
+                backgroundColor: Colors.white,
+              ),
+            ),
+            Positioned(
+              right: 20,
+              top: 120,
+              child: FloatingActionButton(
+                heroTag: "messages",
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ChatListPage(currentUserRoomCode: '141004'),
+                    ),
+                  );
+                },
+                child: const Icon(
+                  Icons.messenger,
                   color: Colors.black,
                   size: 25,
                 ),

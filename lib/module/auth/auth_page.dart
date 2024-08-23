@@ -42,11 +42,7 @@ class _LoginPageState extends State<LoginPage> {
                   context,
                   MaterialPageRoute(builder: (context) => HomePage()),
                 );
-              } else if (state is AuthError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.error)),
-                );
-              }
+              } else if (state is AuthError) {}
             },
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -127,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                           MaterialPageRoute(builder: (context) => SignupPage()),
                         );
                       },
-                      child: const Text("Don't have an account? Sign up"),
+                      child: const Text("Belum memiliki akun? Daftar"),
                     ),
                   ],
                 ),

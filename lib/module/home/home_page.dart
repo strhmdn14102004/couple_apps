@@ -487,8 +487,8 @@ class _HomePageState extends State<HomePage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          ChatListPage(currentUserRoomCode: '141004'),
+                      builder: (context) => ChatListPage(
+                          currentUserRoomCode: _currentRoomCode.toString()),
                     ),
                   );
                 },

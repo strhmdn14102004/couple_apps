@@ -12,13 +12,11 @@ class ChatListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get the current user's ID
     final currentUserId = auth.FirebaseAuth.instance.currentUser?.uid;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Bubble Chats'),
-       centerTitle: true,
+        centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -29,7 +27,6 @@ class ChatListPage extends StatelessWidget {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-
           var users = snapshot.data!.docs
               .where((doc) => doc.id != currentUserId)
               .map((doc) {
@@ -42,16 +39,14 @@ class ChatListPage extends StatelessWidget {
               roomCode: data['roomCode'],
             );
           }).toList();
-
           return ListView.builder(
             itemCount: users.length,
             itemBuilder: (context, index) {
               var user = users[index];
-
               return StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('users')
-                    .doc(user.uid)
+                    .doc(currentUserId)
                     .collection('messages')
                     .orderBy('timestamp', descending: true)
                     .limit(1)
@@ -71,7 +66,7 @@ class ChatListPage extends StatelessWidget {
                         ),
                       ),
                       subtitle: Text(
-                        'No messages yet',
+                        'tidak ada pesan tersedia',
                         style: TextStyle(
                           color: Colors.grey[600],
                         ),
@@ -83,10 +78,16 @@ class ChatListPage extends StatelessWidget {
                       },
                     );
                   }
-
                   var lastMessageDoc = messageSnapshot.data!.docs.first;
                   var lastMessage = lastMessageDoc['message'];
-                  var timestamp = lastMessageDoc['timestamp'] as Timestamp;
+                  var timestamp;
+                  if (lastMessageDoc['timestamp'] != null) {
+                    timestamp = lastMessageDoc['timestamp'] as Timestamp;
+                  } else {
+                    timestamp = null;
+                  }
+                  var senderId = lastMessageDoc[
+                      'senderId']; // Assuming senderId field exists
 
                   return ListTile(
                     leading: CircleAvatar(
@@ -111,27 +112,31 @@ class ChatListPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          DateFormat('hh:mm a').format(timestamp.toDate()),
+                          timestamp != null
+                              ? DateFormat('hh:mm a').format(timestamp.toDate())
+                              : 'Unknown time',
                           style: const TextStyle(
                             color: Colors.grey,
                             fontSize: 12,
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Colors.teal,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Text(
-                            '1', // Placeholder for unread message count
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
+                        if (senderId !=
+                            currentUserId) // Show notification only if message is from another user
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: Colors.teal,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Text(
+                              '1', // Placeholder for unread message count
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        ),
                       ],
                     ),
                     onTap: () {

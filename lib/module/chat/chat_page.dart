@@ -16,32 +16,36 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
 
-  void _sendMessage() {
-    if (_messageController.text.isNotEmpty) {
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.user.uid)
-          .collection('messages')
-          .add({
-        'senderId': widget.currentUserId,
-        'message': _messageController.text,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+ void _sendMessage() {
+  if (_messageController.text.isNotEmpty) {
+    // Store message for the receiver
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.user.uid)
+        .collection('messages')
+        .add({
+      'senderId': widget.currentUserId,
+      'receiverId': widget.user.uid,
+      'message': _messageController.text,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
 
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(widget.currentUserId)
-          .collection('messages')
-          .add({
-        'senderId': widget.currentUserId,
-        'receiverId': widget.user.uid,
-        'message': _messageController.text,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+    // Store message for the sender
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.currentUserId)
+        .collection('messages')
+        .add({
+      'senderId': widget.currentUserId,
+      'receiverId': widget.user.uid,
+      'message': _messageController.text,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
 
-      _messageController.clear();
-    }
+    _messageController.clear();
   }
+}
+
 
   Stream<QuerySnapshot> _chatMessagesStream() {
     return FirebaseFirestore.instance

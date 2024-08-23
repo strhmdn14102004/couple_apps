@@ -1,4 +1,5 @@
 import 'package:couple_app/module/auth/auth_bloc.dart';
+import 'package:couple_app/module/auth/forgot_password.dart';
 import 'package:couple_app/module/auth/sign_up.dart';
 import 'package:couple_app/module/home/home_page.dart';
 import 'package:flutter/material.dart';
@@ -143,6 +144,20 @@ class _LoginPageState extends State<LoginPage> {
                   },
                   child: const Text(
                     "Belum memiliki akun? Daftar",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => ForgotPasswordPage()),
+                    );
+                  },
+                  child: const Text(
+                    "Lupa password",
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),

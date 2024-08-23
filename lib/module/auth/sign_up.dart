@@ -14,6 +14,7 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _fullNameController = TextEditingController();
@@ -40,21 +41,12 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<String?> _uploadImage(File image) async {
     try {
-      final authState = context.read<AuthBloc>().state;
-      if (authState is AuthAuthenticated) {
-        final userId = authState.userId;
-        final storageRef = FirebaseStorage.instance
-            .ref()
-            .child('user_profile_images')
-            .child('$userId.jpg');
-        await storageRef.putFile(image);
-        return await storageRef.getDownloadURL();
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User is not authenticated')),
-        );
-        return null;
-      }
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('user_profile_images')
+          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await storageRef.putFile(image);
+      return await storageRef.getDownloadURL();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to upload image: $e')),
@@ -63,15 +55,29 @@ class _SignupPageState extends State<SignupPage> {
     }
   }
 
-  void _onSignupButtonPressed() async {
-    context.read<AuthBloc>().add(
-          AuthSignupRequested(
+  Future<void> _handleSignup() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isUploading = true;
+      });
+
+      String? imageUrl;
+      if (_profileImage != null) {
+        imageUrl = await _uploadImage(_profileImage!);
+      }
+
+      // Proceed with signup
+      context.read<AuthBloc>().add(AuthSignupRequested(
             _emailController.text,
             _passwordController.text,
             _fullNameController.text,
-            '',
-          ),
-        );
+            imageUrl ?? '', // Use the image URL or an empty string
+          ));
+
+      setState(() {
+        _isUploading = false;
+      });
+    }
   }
 
   @override
@@ -84,122 +90,129 @@ class _SignupPageState extends State<SignupPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) async {
           if (state is AuthError) {
+            Overlays.error(
+              message: "Error Gagal Membuat Akun, Ada Sesuatu Yang Salah",
+            );
           } else if (state is AuthAuthenticated) {
-            if (_profileImage != null) {
-              setState(() {
-                _isUploading = true;
-              });
-              final photoUrl = await _uploadImage(_profileImage!);
-              setState(() {
-                _isUploading = false;
-              });
-              if (photoUrl != null) {
-                context.read<AuthBloc>().add(
-                      AuthUpdateProfile(photoUrl),
-                    );
-              }
-            }
-
-            // Navigator.pushReplacement(
-            //   context,
-            //   MaterialPageRoute(builder: (context) => LoginPage()),
-            // );
             Overlays.success(
               message: "Registrasi Akun Berhasil",
             );
+            // Navigate to the login page
           }
         },
         child: Padding(
           padding: const EdgeInsets.all(18),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: CircleAvatar(
-                    radius: 80,
-                    backgroundColor: Colors.black,
-                    backgroundImage: _profileImage != null
-                        ? FileImage(_profileImage!)
-                        : const AssetImage('assets/images/default_profile.png')
-                            as ImageProvider,
-                    child: _profileImage == null
-                        ? const Icon(
-                            Icons.camera_alt_outlined,
-                            color: Colors.white,
-                            size: 30,
-                          )
-                        : null,
-                  ),
-                ),
-                SizedBox(height: Dimensions.size35),
-                TextField(
-                  controller: _fullNameController,
-                  decoration: InputDecoration(
-                    labelText: "Nama Panjang",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: CircleAvatar(
+                      radius: 80,
+                      backgroundColor: Colors.black,
+                      backgroundImage: _profileImage != null
+                          ? FileImage(_profileImage!)
+                          : const AssetImage(
+                                  'assets/images/default_profile.png')
+                              as ImageProvider,
+                      child: _profileImage == null
+                          ? const Icon(
+                              Icons.camera_alt_outlined,
+                              color: Colors.black,
+                              size: 30,
+                            )
+                          : null,
                     ),
-                    prefixIcon: const Icon(Icons.person),
                   ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _emailController,
-                  decoration: InputDecoration(
-                    labelText: "Email",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    prefixIcon: const Icon(Icons.email),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _passwordController,
-                  decoration: InputDecoration(
-                    labelText: "Password",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    prefixIcon: const Icon(Icons.lock),
-                  ),
-                  obscureText: true,
-                ),
-                SizedBox(height: Dimensions.size35),
-                BlocBuilder<AuthBloc, AuthState>(
-                  builder: (context, state) {
-                    if (state is AuthLoading || _isUploading) {
-                      return const CircularProgressIndicator();
-                    }
-                    return ElevatedButton(
-                      onPressed: _onSignupButtonPressed,
-                      child: const Text("Sign Up"),
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 50, vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+                  SizedBox(height: Dimensions.size35),
+                  TextFormField(
+                    controller: _fullNameController,
+                    decoration: InputDecoration(
+                      labelText: "Nama",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Sudah Memiliki Akun? Login"),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.grey,
+                      prefixIcon: const Icon(Icons.person),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Nama is required';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-              ],
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: "Email",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      prefixIcon: const Icon(Icons.email),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Email is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      prefixIcon: const Icon(Icons.lock),
+                    ),
+                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Password is required';
+                      }
+                      return null;
+                    },
+                  ),
+                  SizedBox(height: Dimensions.size35),
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      if (state is AuthLoading || _isUploading) {
+                        return const CircularProgressIndicator();
+                      }
+                      return ElevatedButton(
+                        onPressed: _handleSignup,
+                        child: const Text("Sign Up"),
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text("Sudah Memiliki Akun? Login"),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

@@ -22,6 +22,7 @@ class AuthSignupRequested extends AuthEvent {
 
   const AuthSignupRequested(this.email, this.password, this.fullName, this.photoProfile);
 }
+
 class AuthUpdateProfile extends AuthEvent {
   final String photoUrl;
 

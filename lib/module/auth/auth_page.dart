@@ -1,9 +1,11 @@
+import 'package:couple_app/helper/dimensions.dart';
 import 'package:couple_app/module/auth/auth_bloc.dart';
 import 'package:couple_app/module/auth/forgot_password.dart';
 import 'package:couple_app/module/auth/sign_up.dart';
 import 'package:couple_app/module/home/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class LoginPage extends StatefulWidget {
@@ -56,7 +58,14 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Image.asset("assets/images/maps.png"),
+                 Center(
+                  child: Lottie.asset(
+                    "assets/lottie/login.json",
+                    frameRate: FrameRate(60),
+                    width: Dimensions.size100 * 3,
+                    repeat: true,
+                  ),
+                ),
                 const Text(
                   "Login",
                   style: TextStyle(

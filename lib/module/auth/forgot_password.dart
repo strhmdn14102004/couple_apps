@@ -55,9 +55,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           // Wrap with Form widget
           key: _formKey,
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: EdgeInsets.only(left: 18, right: 18, bottom: 18, top: 75),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Center(
                   child: Lottie.asset(
@@ -66,6 +65,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     width: Dimensions.size100 * 2,
                     repeat: true,
                   ),
+                ),
+                SizedBox(
+                  height: Dimensions.size20,
                 ),
                 const Text(
                   'Masukan email kamu, untuk mendapatkan link reset password',

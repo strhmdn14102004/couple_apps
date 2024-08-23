@@ -96,10 +96,11 @@ class _RoomCodePageState extends State<RoomCodePage> {
           centerTitle: true,
         ),
         body: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.only(left:16,right:16),
           child: Form(
             key: _formKey,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Center(

@@ -21,11 +21,11 @@ import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:lottie/lottie.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  // Handle background message
 }
 
 void main() async {
@@ -33,9 +33,63 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   HttpOverrides.global = CustomHttpOverrides();
   initializeDateFormatting();
+  await _requestPermissions();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await Preferences.getInstance().init();
   runApp(App());
+}
+
+Future<void> _requestPermissions() async {
+  await _requestLocationPermission(); // Request location permission first
+}
+
+Future<void> _requestLocationPermission() async {
+  PermissionStatus status = await Permission.locationWhenInUse.request();
+
+  if (status.isGranted) {
+    status = await Permission.locationAlways.request();
+
+    if (status.isGranted) {
+      await Future.delayed(const Duration(seconds: 2));
+      await _requestNotificationPermission(); // Request notification permission after location permission is granted
+    }
+  } else if (status.isDenied || status.isRestricted) {
+    // Handle permission denial appropriately
+  }
+}
+
+Future<void> _requestNotificationPermission() async {
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  // Request permission for notifications
+  NotificationSettings settings = await messaging.requestPermission(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
+  if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+    print('User granted notification permission');
+  } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+    print('User granted provisional notification permission');
+  } else {
+    print('User declined or has not accepted notification permission');
+  }
+
+  // Handle incoming messages
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    // Handle the message
+  });
+
+  // Get the token and send it to the server
+  String? token = await messaging.getToken();
+  print("FCM Token: $token");
+
+  // Listen for token refresh
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+    print("New FCM Token: $newToken");
+    // Send new token to server if needed
+  });
 }
 
 class App extends StatefulWidget {
@@ -53,6 +107,54 @@ class _AppState extends State<App> {
   void initState() {
     super.initState();
     _checkUserSession();
+    _setupFCM();
+  }
+
+  Future<void> _setupFCM() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    // Request permission for notifications
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      print('User granted permission');
+    } else if (settings.authorizationStatus ==
+        AuthorizationStatus.provisional) {
+      print('User granted provisional permission');
+    } else {
+      print('User declined or has not accepted permission');
+    }
+
+    // Get the token each time the application loads
+    String? token = await messaging.getToken();
+    print("FCM Token: $token");
+
+    // Handle incoming messages when the app is in the foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('New message: ${message.notification?.title}'),
+          ),
+        );
+      }
+    });
+
+    // Handle incoming messages when the app is opened from a terminated state
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'App opened from notification: ${message.notification?.title}'),
+          ),
+        );
+      }
+    });
   }
 
   Future<void> _checkUserSession() async {

@@ -2,10 +2,8 @@ import 'package:couple_app/module/auth/auth_bloc.dart';
 import 'package:couple_app/module/auth/forgot_password.dart';
 import 'package:couple_app/module/auth/sign_up.dart';
 import 'package:couple_app/module/home/home_page.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -17,119 +15,10 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
   @override
   void initState() {
     super.initState();
-    _requestPermissions();
-    _setupFCM(); // Call the _setupFCM method
-  }
-
-  Future<void> _requestPermissions() async {
-    await _requestLocationPermission();
-    await _requestNotificationPermission();
-  }
-
-  Future<void> _requestLocationPermission() async {
-    PermissionStatus status = await Permission.locationWhenInUse.request();
-    if (status.isGranted) {
-      status = await Permission.locationAlways.request();
-    }
-
-    if (status.isDenied || status.isRestricted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Location permission is required to proceed.'),
-        ),
-      );
-    }
-  }
-
-  Future<void> _requestNotificationPermission() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-    // Request permission for iOS
-    NotificationSettings settings = await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('User granted notification permission');
-    } else if (settings.authorizationStatus ==
-        AuthorizationStatus.provisional) {
-      print('User granted provisional notification permission');
-    } else {
-      print('User declined or has not accepted notification permission');
-    }
-
-    // Handle incoming messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              'New notification: ${message.notification?.title ?? 'No Title'}'),
-        ),
-      );
-    });
-
-    // Get the token and send it to the server
-    String? token = await messaging.getToken();
-    print("FCM Token: $token");
-
-    // You can also listen for token refresh
-    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-      print("New FCM Token: $newToken");
-      // Send new token to server if needed
-    });
-  }
-
-  // Define the _setupFCM method
-  Future<void> _setupFCM() async {
-    FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-    // Request permission for notifications
-    NotificationSettings settings = await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('User granted permission');
-    } else if (settings.authorizationStatus ==
-        AuthorizationStatus.provisional) {
-      print('User granted provisional permission');
-    } else {
-      print('User declined or has not accepted permission');
-    }
-
-    // Get the token each time the application loads
-    String? token = await messaging.getToken();
-    print("FCM Token: $token");
-
-    // Handle incoming messages when the app is in the foreground
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('New message: ${message.notification?.title}'),
-          ),
-        );
-      }
-    });
-
-    // Handle incoming messages when the app is opened from a terminated state
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'App opened from notification: ${message.notification?.title}'),
-          ),
-        );
-      }
-    });
   }
 
   @override

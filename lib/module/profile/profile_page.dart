@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:couple_app/helper/dimensions.dart';
 import 'package:couple_app/module/auth/change_password_page.dart';
 import 'package:couple_app/module/room/room_code_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -84,7 +85,7 @@ class ProfilePage extends StatelessWidget {
                         style: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: Dimensions.size35),
                     ],
                     Center(
                       child: SizedBox(
@@ -159,7 +160,7 @@ class ProfilePage extends StatelessWidget {
                             );
                           },
                           child: const Text(
-                            'Ubah Password',
+                            'Ganti Password',
                             style: TextStyle(color: Colors.white),
                           ),
                         ),

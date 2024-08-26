@@ -19,6 +19,7 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _fullNameController = TextEditingController();
   File? _profileImage;
+  bool _obscurePassword = true;
   bool _isUploading = false;
 
   Future<void> _pickImage() async {
@@ -84,7 +85,7 @@ class _SignupPageState extends State<SignupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Sign Up"),
+        title: const Text("Buat Akun Baru"),
         centerTitle: true,
       ),
       body: BlocListener<AuthBloc, AuthState>(
@@ -101,7 +102,7 @@ class _SignupPageState extends State<SignupPage> {
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: SingleChildScrollView(
@@ -128,7 +129,7 @@ class _SignupPageState extends State<SignupPage> {
                           : null,
                     ),
                   ),
-                  SizedBox(height: Dimensions.size35),
+                  SizedBox(height: Dimensions.size45),
                   TextFormField(
                     controller: _fullNameController,
                     decoration: InputDecoration(
@@ -165,14 +166,26 @@ class _SignupPageState extends State<SignupPage> {
                   const SizedBox(height: 10),
                   TextFormField(
                     controller: _passwordController,
+                    obscureText: _obscurePassword, // Use the boolean variable
                     decoration: InputDecoration(
                       labelText: "Password",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                       prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
                     ),
-                    obscureText: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Password is required';
@@ -180,7 +193,7 @@ class _SignupPageState extends State<SignupPage> {
                       return null;
                     },
                   ),
-                  SizedBox(height: Dimensions.size35),
+                  SizedBox(height: Dimensions.size45),
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       if (state is AuthLoading || _isUploading) {
@@ -188,7 +201,7 @@ class _SignupPageState extends State<SignupPage> {
                       }
                       return ElevatedButton(
                         onPressed: _handleSignup,
-                        child: const Text("Sign Up"),
+                        child: const Text("Daftar"),
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
                           backgroundColor: Colors.black,
@@ -201,7 +214,7 @@ class _SignupPageState extends State<SignupPage> {
                       );
                     },
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 150),
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);

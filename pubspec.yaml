@@ -53,6 +53,7 @@ flutter:
     - assets/
     - assets/font/
     - assets/images/
+    - assets/images/treasure-map.png
     - assets/images/maps.png
     - assets/images/default_profile.png
     - assets/lottie/

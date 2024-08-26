@@ -1,4 +1,3 @@
-import 'package:couple_app/helper/dimensions.dart';
 import 'package:couple_app/module/auth/auth_bloc.dart';
 import 'package:couple_app/module/auth/forgot_password.dart';
 import 'package:couple_app/module/auth/sign_up.dart';
@@ -6,7 +5,6 @@ import 'package:couple_app/module/home/home_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lottie/lottie.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class LoginPage extends StatefulWidget {
@@ -18,12 +16,12 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
+  bool _obscurePassword = true;
   @override
   void initState() {
     super.initState();
     _requestPermissions();
-    _setupFCM();  // Call the _setupFCM method
+    _setupFCM(); // Call the _setupFCM method
   }
 
   Future<void> _requestPermissions() async {
@@ -34,7 +32,6 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _requestLocationPermission() async {
     PermissionStatus status = await Permission.locationWhenInUse.request();
     if (status.isGranted) {
-      // Request "Always Allow" permission
       status = await Permission.locationAlways.request();
     }
 
@@ -100,7 +97,8 @@ class _LoginPageState extends State<LoginPage> {
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       print('User granted permission');
-    } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
+    } else if (settings.authorizationStatus ==
+        AuthorizationStatus.provisional) {
       print('User granted provisional permission');
     } else {
       print('User declined or has not accepted permission');
@@ -126,7 +124,8 @@ class _LoginPageState extends State<LoginPage> {
       if (message.notification != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('App opened from notification: ${message.notification?.title}'),
+            content: Text(
+                'App opened from notification: ${message.notification?.title}'),
           ),
         );
       }
@@ -156,13 +155,11 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Center(
-                  child: Lottie.asset(
-                    "assets/lottie/login.json",
-                    frameRate: FrameRate(60),
-                    width: Dimensions.size100 * 3,
-                    repeat: true,
-                  ),
-                ),
+                    child: Image.asset(
+                  "assets/images/treasure-map.png",
+                  height: 200,
+                  width: 200,
+                )),
                 const Text(
                   "Login",
                   style: TextStyle(
@@ -189,13 +186,25 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
+                  obscureText: _obscurePassword, // Use the boolean variable
                   decoration: InputDecoration(
                     labelText: "Password",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(15),
                     ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
-                  obscureText: true,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Password is required';
@@ -203,7 +212,23 @@ class _LoginPageState extends State<LoginPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.only(left: 247),
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ForgotPasswordPage()),
+                      );
+                    },
+                    child: const Text(
+                      "Lupa password?",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 BlocBuilder<AuthBloc, AuthState>(
                   builder: (context, state) {
                     if (state is AuthLoading) {
@@ -250,20 +275,6 @@ class _LoginPageState extends State<LoginPage> {
                   },
                   child: const Text(
                     "Belum memiliki akun? Daftar",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => ForgotPasswordPage()),
-                    );
-                  },
-                  child: const Text(
-                    "Lupa password",
                     style: TextStyle(color: Colors.grey),
                   ),
                 ),

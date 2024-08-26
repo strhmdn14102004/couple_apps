@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:couple_app/module/auth/change_password_page.dart';
 import 'package:couple_app/module/room/room_code_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -66,15 +67,13 @@ class ProfilePage extends StatelessWidget {
                     if (state is ProfileLoaded) ...[
                       CircleAvatar(
                         radius: 75,
-                        backgroundColor: Colors
-                            .transparent, // Agar lingkaran memiliki latar belakang transparan
+                        backgroundColor: Colors.transparent,
                         child: ClipOval(
                           child: Image.network(
                             state.photoProfile,
-                            fit: BoxFit
-                                .cover, // Atur gambar agar mengisi lingkaran dengan baik
-                            width: 150, // Sesuaikan lebar dengan radius * 2
-                            height: 150, // Sesuaikan tinggi dengan radius * 2
+                            fit: BoxFit.cover,
+                            width: 150,
+                            height: 150,
                           ),
                         ),
                       ),
@@ -89,7 +88,7 @@ class ProfilePage extends StatelessWidget {
                     ],
                     Center(
                       child: SizedBox(
-                        width: 150, // Reduced width for the button
+                        width: 150,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black,
@@ -115,7 +114,7 @@ class ProfilePage extends StatelessWidget {
                     const SizedBox(height: 20),
                     Center(
                       child: SizedBox(
-                        width: 150, // Reduced width for the button
+                        width: 150,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.black,
@@ -139,6 +138,33 @@ class ProfilePage extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 20),
+                    Center(
+                      child: SizedBox(
+                        width: 150,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(vertical: 15.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ChangePasswordPage(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Ubah Password',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               );
@@ -147,7 +173,6 @@ class ProfilePage extends StatelessWidget {
           floatingActionButton: FloatingActionButton(
             backgroundColor: Colors.black,
             onPressed: () {
-              // Show confirmation dialog before logging out
               showDialog(
                 context: context,
                 builder: (BuildContext context) {
@@ -157,13 +182,13 @@ class ProfilePage extends StatelessWidget {
                     actions: [
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).pop(); // Close the dialog
+                          Navigator.of(context).pop();
                         },
                         child: const Text('Batal'),
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).pop(); // Close the dialog
+                          Navigator.of(context).pop();
                           context.read<AuthBloc>().add(AuthLogoutRequested());
                         },
                         child: const Text('Logout'),

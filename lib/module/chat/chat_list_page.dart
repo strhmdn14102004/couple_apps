@@ -19,7 +19,7 @@ class ChatListPage extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.add_comment_rounded),
             onPressed: () => _showNewChatDialog(context, currentUserId),
           ),
         ],

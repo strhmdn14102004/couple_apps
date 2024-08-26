@@ -42,7 +42,7 @@ class ProfilePage extends StatelessWidget {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Profile Page'),
+            title: const Text('My Profile'),
             centerTitle: true,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),

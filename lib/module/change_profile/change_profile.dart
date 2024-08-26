@@ -150,7 +150,7 @@ class _ChangeProfilePageState extends State<ChangeProfilePage> {
                         }
                       },
                       child: const Text(
-                        'Simpan',
+                        'Simpan Perubahan',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),

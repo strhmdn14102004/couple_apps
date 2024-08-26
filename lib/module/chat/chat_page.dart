@@ -280,12 +280,12 @@ class _ChatPageState extends State<ChatPage> {
                 return Text(widget.user.fullName);
               },
             ),
-            const Spacer(), // This will push the icons to the right
+            const Spacer(),
             IconButton(
               onPressed: () {
                 Overlays.comming(
                   message:
-                      "Sabar ya featurenya lagi dibuat nih ama sasat dengan penuh rasa cinta",
+                      "Sabar ya, featurenya lagi dibuat nih sama sasat dengan sepenuh rasa cinta hehe.",
                 );
               },
               icon: const Icon(Icons.call),
@@ -294,7 +294,7 @@ class _ChatPageState extends State<ChatPage> {
               onPressed: () {
                 Overlays.comming(
                   message:
-                      "Sabar ya featurenya lagi dibuat nih ama sasat dengan penuh rasa cinta",
+                      "Sabar ya, featurenya lagi dibuat nih sama sasat dengan sepenuh rasa cinta hehe.",
                 );
               },
               icon: const Icon(Icons.video_call),

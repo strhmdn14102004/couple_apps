@@ -174,8 +174,8 @@ class ProfilePage extends StatelessWidget {
               );
             },
             child: const Icon(
-              Icons.logout_outlined,
-              color: Colors.red,
+              Icons.directions_run_rounded,
+              color: Colors.white,
             ),
           ),
         ),

@@ -66,7 +66,7 @@ class GreetingPopupManager {
             child: Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
-                color: Colors.transparent,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20.0),
               ),
               child: Column(
@@ -85,7 +85,7 @@ class GreetingPopupManager {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text('$greetingTime'),
+                    child: Text('$greetingTime duniaku'),
                   ),
                 ],
               ),

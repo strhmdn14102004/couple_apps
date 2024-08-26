@@ -86,20 +86,31 @@ class _ChangeProfilePageState extends State<ChangeProfilePage> {
                   },
                   child: CircleAvatar(
                     radius: 80,
-                    backgroundImage: _imageFile != null
-                        ? FileImage(File(_imageFile!.path))
-                        : _profileImageUrl != null &&
-                                _profileImageUrl!.isNotEmpty
-                            ? NetworkImage(_profileImageUrl!)
-                            : null,
-                    child: _imageFile == null &&
-                            (_profileImageUrl == null ||
-                                _profileImageUrl!.isEmpty)
-                        ? const Icon(
-                            Icons.camera_alt,
-                            size: 40,
-                          )
-                        : null,
+                    backgroundColor:
+                        Colors.grey[200], // Provide a default background color
+                    child: ClipOval(
+                      child: _imageFile != null
+                          ? Image.file(
+                              File(_imageFile!.path),
+                              width: 160, // Double the radius
+                              height: 160, // Double the radius
+                              fit: BoxFit
+                                  .cover, // Cover ensures the image covers the entire CircleAvatar
+                            )
+                          : _profileImageUrl != null &&
+                                  _profileImageUrl!.isNotEmpty
+                              ? Image.network(
+                                  _profileImageUrl!,
+                                  width: 160, // Double the radius
+                                  height: 160, // Double the radius
+                                  fit: BoxFit
+                                      .cover, // Cover ensures the image covers the entire CircleAvatar
+                                )
+                              : const Icon(
+                                  Icons.camera_alt,
+                                  size: 40,
+                                ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),

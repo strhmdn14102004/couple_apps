@@ -65,8 +65,18 @@ class ProfilePage extends StatelessWidget {
                   children: [
                     if (state is ProfileLoaded) ...[
                       CircleAvatar(
-                        backgroundImage: NetworkImage(state.photoProfile),
                         radius: 75,
+                        backgroundColor: Colors
+                            .transparent, // Agar lingkaran memiliki latar belakang transparan
+                        child: ClipOval(
+                          child: Image.network(
+                            state.photoProfile,
+                            fit: BoxFit
+                                .cover, // Atur gambar agar mengisi lingkaran dengan baik
+                            width: 150, // Sesuaikan lebar dengan radius * 2
+                            height: 150, // Sesuaikan tinggi dengan radius * 2
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -163,7 +173,10 @@ class ProfilePage extends StatelessWidget {
                 },
               );
             },
-            child: const Icon(Icons.logout_outlined,color: Colors.red,),
+            child: const Icon(
+              Icons.logout_outlined,
+              color: Colors.red,
+            ),
           ),
         ),
       ),

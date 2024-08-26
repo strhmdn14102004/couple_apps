@@ -15,7 +15,7 @@ class ChatListPage extends StatelessWidget {
     final currentUserId = auth.FirebaseAuth.instance.currentUser?.uid;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bubble Chats (BETA)'),
+        title: const Text('Bubble Chats'),
         centerTitle: true,
         actions: [
           IconButton(
@@ -154,8 +154,8 @@ class ChatListPage extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  "Mulai Chatan dengan Temanmu",
+                const Text(
+                  "Mulai Chat",
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

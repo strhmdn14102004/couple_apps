@@ -80,58 +80,74 @@ class ChatListPage extends StatelessWidget {
                   var unreadCount =
                       conversation['unreadCount'][currentUserId] ?? 0;
 
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: NetworkImage(user.profilePicUrl),
-                      radius: 25,
-                    ),
-                    title: Text(
-                      user.fullName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Text(
-                      lastMessage,
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          formattedTimestamp,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        if (unreadCount > 0)
-                          CircleAvatar(
-                            radius: 10,
-                            backgroundColor: Colors.red,
-                            child: Text(
-                              unreadCount.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    onTap: () {
-                      _navigateToChatPage(
-                        context,
-                        user,
-                        currentUserId!,
-                        conversation.id,
-                      );
-                    },
-                  );
+                return ListTile(
+  leading: CircleAvatar(
+    backgroundImage: NetworkImage(user.profilePicUrl),
+    radius: 25,
+  ),
+  title: Text(
+    user.fullName,
+    style: const TextStyle(
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  subtitle: FutureBuilder<DocumentSnapshot>(
+    future: FirebaseFirestore.instance
+        .collection('conversations')
+        .doc(conversation.id)
+        .get(),
+    builder: (context, conversationSnapshot) {
+      if (!conversationSnapshot.hasData) {
+        return const Text('Loading...');
+      }
+
+      var isTyping = conversationSnapshot.data!['typingStatus'][otherUserId] ?? false;
+      var lastMessage = isTyping ? 'Sedang mengetik...' : conversation['lastMessage'] ?? 'Belum ada pesan';
+
+      return Text(
+        lastMessage,
+        style: TextStyle(
+          color: Colors.grey[600],
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
+    },
+  ),
+  trailing: Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Text(
+        formattedTimestamp,
+        style: const TextStyle(
+          fontSize: 12,
+          color: Colors.grey,
+        ),
+      ),
+      if (unreadCount > 0)
+        CircleAvatar(
+          radius: 10,
+          backgroundColor: Colors.red,
+          child: Text(
+            unreadCount.toString(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+            ),
+          ),
+        ),
+    ],
+  ),
+  onTap: () {
+    _navigateToChatPage(
+      context,
+      user,
+      currentUserId!,
+      conversation.id,
+    );
+  },
+);
+
                 },
               );
             },

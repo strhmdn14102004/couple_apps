@@ -23,6 +23,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
+  bool _isTyping = false;
 
   void _sendMessage() async {
     if (_messageController.text.isNotEmpty) {
@@ -30,7 +31,7 @@ class _ChatPageState extends State<ChatPage> {
         'senderId': widget.currentUserId,
         'message': _messageController.text,
         'timestamp': FieldValue.serverTimestamp(),
-        'isRead': false, // Add isRead field here
+        'isRead': false,
       };
 
       final chatDocRef = FirebaseFirestore.instance
@@ -48,7 +49,39 @@ class _ChatPageState extends State<ChatPage> {
       });
 
       _messageController.clear();
+      _updateTypingStatus(false);
     }
+  }
+
+  void _onMessageChanged(String value) {
+    if (!_isTyping && value.isNotEmpty) {
+      setState(() {
+        _isTyping = true;
+      });
+      _updateTypingStatus(true);
+    } else if (_isTyping && value.isEmpty) {
+      setState(() {
+        _isTyping = false;
+      });
+      _updateTypingStatus(false);
+    }
+  }
+
+  void _onMessageSubmitted(String value) {
+    setState(() {
+      _isTyping = false;
+    });
+    _updateTypingStatus(false);
+    _sendMessage();
+  }
+
+  void _updateTypingStatus(bool isTyping) async {
+    await FirebaseFirestore.instance
+        .collection('conversations')
+        .doc(widget.chatId)
+        .update({
+      'typingStatus.${widget.currentUserId}': isTyping,
+    });
   }
 
   Stream<QuerySnapshot> _chatMessagesStream() {
@@ -203,47 +236,73 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     appBar: AppBar(
-  title: Row(
-    children: [
-      GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => UserDetailsPage(userId: widget.user.uid),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        UserDetailsPage(userId: widget.user.uid),
+                  ),
+                );
+              },
+              child: CircleAvatar(
+                backgroundImage: NetworkImage(widget.user.profilePicUrl),
+              ),
             ),
-          );
-        },
-        child: CircleAvatar(
-          backgroundImage: NetworkImage(widget.user.profilePicUrl),
-        ),
-      ),
-      const SizedBox(width: 10),
-      Text(widget.user.fullName),
-      const Spacer(), // This will push the icons to the right
-      IconButton(
-        onPressed: () {
-          Overlays.comming(
-            message:
-                "Sabar ya featurenya lagi dibuat nih ama sasat dengan penuh rasa cinta",
-          );
-        },
-        icon: const Icon(Icons.call),
-      ),
-      IconButton(
-        onPressed: () {
-          Overlays.comming(
-            message:
-                "Sabar ya featurenya lagi dibuat nih ama sasat dengan penuh rasa cinta",
-          );
-        },
-        icon: const Icon(Icons.video_call),
-      ),
-    ],
-  ),
-  centerTitle: true,
-),
+            const SizedBox(width: 10),
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('conversations')
+                  .doc(widget.chatId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  var data = snapshot.data!.data() as Map<String, dynamic>;
+                  var typingStatus = data['typingStatus'] ?? {};
+                  bool isUserTyping = typingStatus.entries.any((entry) =>
+                      entry.key != widget.currentUserId && entry.value == true);
 
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.user.fullName),
+                      if (isUserTyping)
+                        const Text(
+                          'sedang mengetik...',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                    ],
+                  );
+                }
+                return Text(widget.user.fullName);
+              },
+            ),
+            const Spacer(), // This will push the icons to the right
+            IconButton(
+              onPressed: () {
+                Overlays.comming(
+                  message:
+                      "Sabar ya featurenya lagi dibuat nih ama sasat dengan penuh rasa cinta",
+                );
+              },
+              icon: const Icon(Icons.call),
+            ),
+            IconButton(
+              onPressed: () {
+                Overlays.comming(
+                  message:
+                      "Sabar ya featurenya lagi dibuat nih ama sasat dengan penuh rasa cinta",
+                );
+              },
+              icon: const Icon(Icons.video_call),
+            ),
+          ],
+        ),
+        centerTitle: true,
+      ),
       body: Column(
         children: [
           Expanded(
@@ -408,6 +467,8 @@ class _ChatPageState extends State<ChatPage> {
               children: [
                 Expanded(
                   child: TextField(
+                    onChanged: _onMessageChanged,
+                    onSubmitted: _onMessageSubmitted,
                     controller: _messageController,
                     decoration: InputDecoration(
                       hintText: 'Ketik Pesan',

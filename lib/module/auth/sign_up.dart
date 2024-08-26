@@ -85,7 +85,7 @@ class _SignupPageState extends State<SignupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Buat Akun Baru"),
+        title: const Text("Buat Akun"),
         centerTitle: true,
       ),
       body: BlocListener<AuthBloc, AuthState>(

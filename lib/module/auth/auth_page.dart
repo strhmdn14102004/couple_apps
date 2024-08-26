@@ -50,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: 200,
                 )),
                 const Text(
-                  "Login",
+                  "Login Finding",
                   style: TextStyle(
                     fontSize: 34,
                     fontWeight: FontWeight.bold,

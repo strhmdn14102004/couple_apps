@@ -46,7 +46,7 @@ class CommingSoonOverlay extends ModalRoute<void> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Lottie.asset(
-              "assets/lottie/comming_soon.json",
+              "assets/lottie/love.json",
               frameRate: FrameRate(60),
               width: Dimensions.size100 * 3,
               repeat: true,

@@ -134,15 +134,15 @@ class _AppState extends State<App> {
     print("FCM Token: $token");
 
     // Handle incoming messages when the app is in the foreground
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('New message: ${message.notification?.title}'),
-          ),
-        );
-      }
-    });
+    // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    //   if (message.notification != null) {
+    //     ScaffoldMessenger.of(context).showSnackBar(
+    //       SnackBar(
+    //         content: Text('New message: ${message.notification?.title}'),
+    //       ),
+    //     );
+    //   }
+    // });
 
     // Handle incoming messages when the app is opened from a terminated state
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {

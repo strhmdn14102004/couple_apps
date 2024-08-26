@@ -85,7 +85,15 @@ class GreetingPopupManager {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text('$greetingTime duniaku'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.black, // Warna teks tombol
+                    ),
+                    child: Text(
+                      '$greetingTime duniaku',
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),

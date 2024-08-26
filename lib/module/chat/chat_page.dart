@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:couple_app/api/model/user_model.dart';
 import 'package:couple_app/module/chat/user_details_page.dart';
+import 'package:couple_app/overlay/overlays.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart'; // Import Slidable
 import 'package:intl/intl.dart';
@@ -68,6 +69,15 @@ class _ChatPageState extends State<ChatPage> {
 
     // Update the isRead field to true
     await chatDocRef.update({'isRead': true});
+
+    // Mengurangi unreadCount setelah pesan dibaca
+    await FirebaseFirestore.instance
+        .collection('conversations')
+        .doc(widget.chatId)
+        .update({
+      'unreadCount.${widget.currentUserId}':
+          FieldValue.increment(-1), // Kurangi count
+    });
   }
 
   void _editMessage(String messageId, String currentMessage) {
@@ -193,31 +203,47 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        UserDetailsPage(userId: widget.user.uid),
-                  ),
-                );
-              },
-              child: CircleAvatar(
-                backgroundImage: NetworkImage(widget.user.profilePicUrl),
-              ),
+     appBar: AppBar(
+  title: Row(
+    children: [
+      GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => UserDetailsPage(userId: widget.user.uid),
             ),
-            const SizedBox(width: 10),
-            Text(widget.user.fullName),
-            const SizedBox(width: 110),
-            IconButton(onPressed: () {}, icon: const Icon(Icons.call)),
-            IconButton(onPressed: () {}, icon: const Icon(Icons.video_call)),
-          ],
+          );
+        },
+        child: CircleAvatar(
+          backgroundImage: NetworkImage(widget.user.profilePicUrl),
         ),
-        centerTitle: true,
       ),
+      const SizedBox(width: 10),
+      Text(widget.user.fullName),
+      const Spacer(), // This will push the icons to the right
+      IconButton(
+        onPressed: () {
+          Overlays.comming(
+            message:
+                "Sabar ya featurenya lagi dibuat nih ama sasat dengan penuh rasa cinta",
+          );
+        },
+        icon: const Icon(Icons.call),
+      ),
+      IconButton(
+        onPressed: () {
+          Overlays.comming(
+            message:
+                "Sabar ya featurenya lagi dibuat nih ama sasat dengan penuh rasa cinta",
+          );
+        },
+        icon: const Icon(Icons.video_call),
+      ),
+    ],
+  ),
+  centerTitle: true,
+),
+
       body: Column(
         children: [
           Expanded(

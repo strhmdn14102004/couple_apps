@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:couple_app/helper/dimensions.dart';
 import 'package:couple_app/module/chat/chat_list_page.dart';
 import 'package:couple_app/module/profile/profile_page.dart';
+import 'package:couple_app/widgets/greeting.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,6 +18,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final GreetingPopupManager _greetingPopupManager = GreetingPopupManager();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   GoogleMapController? _mapController;
   LatLng? _currentPosition;
@@ -39,6 +41,7 @@ class _HomePageState extends State<HomePage> {
     _getCurrentLocation();
     _listenToUsersLocations();
     _fetchUserRoomCode();
+    _greetingPopupManager.start(context);
   }
 
   Future<void> _fetchUserRoomCode() async {
@@ -406,6 +409,11 @@ class _HomePageState extends State<HomePage> {
           icon: BitmapDescriptor.defaultMarker,
         ),
       );
+    }
+    @override
+    void dispose() {
+      _greetingPopupManager.stop();
+      super.dispose();
     }
 
     _usersPositions.forEach((id, position) {

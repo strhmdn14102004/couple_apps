@@ -21,7 +21,7 @@ class _RoomCodePageState extends State<RoomCodePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Konfirmasi Kode Ruangan'),
+          title: const Text('Konfirmasi Kode Ruangan'),
           content: Text(
             'Apakah Anda yakin ingin menggunakan kode $roomCode sebagai kode ruangan Anda?',
           ),
@@ -30,14 +30,14 @@ class _RoomCodePageState extends State<RoomCodePage> {
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
               },
-              child: Text('Batal'),
+              child: const Text('Batal'),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
                 _submitRoomCode(); // Proceed with submitting the code
               },
-              child: Text('Ya'),
+              child: const Text('Ya'),
             ),
           ],
         );
@@ -130,7 +130,7 @@ class _RoomCodePageState extends State<RoomCodePage> {
                 TextFormField(
                   controller: _roomCodeController,
                   decoration: InputDecoration(
-                    labelStyle: TextStyle(fontWeight: FontWeight.bold),
+                    labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                     alignLabelWithHint: true,
                     labelText: 'Masukkan Kode Ruangan',
                     border: OutlineInputBorder(

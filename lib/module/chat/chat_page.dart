@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:couple_app/api/model/user_model.dart';
+import 'package:couple_app/module/chat/call_page.dart';
 import 'package:couple_app/module/chat/user_details_page.dart';
 import 'package:couple_app/overlay/overlays.dart';
 import 'package:flutter/material.dart';
@@ -281,15 +282,20 @@ class _ChatPageState extends State<ChatPage> {
               },
             ),
             const Spacer(),
-            IconButton(
-              onPressed: () {
-                Overlays.comming(
-                  message:
-                      "Sabar ya, featurenya lagi dibuat nih sama sasat dengan sepenuh rasa cinta hehe.",
-                );
-              },
-              icon: const Icon(Icons.call),
-            ),
+           IconButton(
+  onPressed: () {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CallPage(
+          isVideoCall: false,
+          user: widget.user,
+        ),
+      ),
+    );
+  },
+  icon: const Icon(Icons.call),
+),
+
             IconButton(
               onPressed: () {
                 Overlays.comming(

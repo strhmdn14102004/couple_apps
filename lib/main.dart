@@ -40,7 +40,8 @@ void main() async {
 }
 
 Future<void> _requestPermissions() async {
-  await _requestLocationPermission(); // Request location permission first
+  await _requestLocationPermission();
+  await [Permission.microphone].request(); // Request location permission first
 }
 
 Future<void> _requestLocationPermission() async {
